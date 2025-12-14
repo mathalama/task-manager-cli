@@ -2,13 +2,8 @@ package main
 
 import (
 	"fmt"
+	"task-tracker/entity"
 )
-
-type Task struct {
-	ID          int
-	Description string
-	Completed   bool
-}
 
 type User struct {
 	ID       int
@@ -24,9 +19,6 @@ func main() {
 		Email:    "test@test",
 		Password: "test",
 	}
-
-	tasks := []Task{}
-	nextTaskID := 1
 
 	fmt.Println("You need to log in to use the system.")
 	var scanEmail string
@@ -59,16 +51,8 @@ func main() {
 			var description string
 			fmt.Print("Enter your task: ")
 			fmt.Scanln(&description)
-
-			task := Task{
-				ID:          nextTaskID,
-				Description: description,
-				Completed:   false,
-			}
-			nextTaskID++
-
-			tasks = append(tasks, task)
-			fmt.Println("Task successfully added")
+			id := entity.AddTask(description)
+			fmt.Println("Task successfully added. ID:", id)
 
 		case 2:
 			var id int
@@ -76,35 +60,16 @@ func main() {
 			fmt.Scan(&id)
 			fmt.Scanln()
 
-			found := false
-			for i := range tasks {
-				if tasks[i].ID == id {
-					found = true
+			var desc string
+			fmt.Print("New description: ")
+			fmt.Scanln(&desc)
 
-					var updateDescription string
-					fmt.Print("New description (press ENTER to skip): ")
-					fmt.Scanln(&updateDescription)
-					if updateDescription != "" {
-						tasks[i].Description = updateDescription
-					}
+			var status int
+			fmt.Print("Completed? (1=yes, 2=no): ")
+			fmt.Scan(&status)
+			fmt.Scanln()
 
-					var status int
-					fmt.Print("Completed? (1 = yes, 2 = no): ")
-					fmt.Scan(&status)
-					fmt.Scanln()
-
-					if status == 1 {
-						tasks[i].Completed = true
-					} else if status == 2 {
-						tasks[i].Completed = false
-					}
-
-					fmt.Println("Task updated")
-					break
-				}
-			}
-
-			if !found {
+			if !entity.UpdateTask(id, desc, status == 1) {
 				fmt.Println("Task not found")
 			}
 
@@ -114,33 +79,10 @@ func main() {
 			fmt.Scan(&id)
 			fmt.Scanln()
 
-			found := false
-			for i := range tasks {
-				if tasks[i].ID == id {
-					tasks = append(tasks[:i], tasks[i+1:]...)
-					found = true
-					fmt.Println("Task deleted")
-					break
-				}
-			}
-
-			if !found {
-				fmt.Println("Task not found")
-			}
+			entity.DeleteTask(id)
 
 		case 4:
-			if len(tasks) == 0 {
-				fmt.Println("No tasks")
-				continue
-			}
-
-			for _, task := range tasks {
-				status := "Not completed"
-				if task.Completed {
-					status = "Completed"
-				}
-				fmt.Printf("ID: %d | %s | %s\n", task.ID, task.Description, status)
-			}
+			entity.ListAllTasks()
 
 		case 0:
 			fmt.Println("Thank you for using Task Manager. See you soon!")
